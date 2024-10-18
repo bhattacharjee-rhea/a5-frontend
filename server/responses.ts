@@ -1,5 +1,6 @@
 import { Authing } from "./app";
 import { AlreadyFriendsError, FriendNotFoundError, FriendRequestAlreadyExistsError, FriendRequestDoc, FriendRequestNotFoundError } from "./concepts/friending";
+import { LikeDoc } from "./concepts/liking";
 import { PostAuthorNotMatchError, PostDoc } from "./concepts/posting";
 import { Router } from "./framework/router";
 
@@ -36,6 +37,14 @@ export default class Responses {
     const to = requests.map((request) => request.to);
     const usernames = await Authing.idsToUsernames(from.concat(to));
     return requests.map((request, i) => ({ ...request, from: usernames[i], to: usernames[i + requests.length] }));
+  }
+
+  /**
+   * Converts an array of LikeDocs into more readable format for the frontend by converting the author id into a username.
+   */
+  static async likes(likes: LikeDoc[]) {
+    const authors = await Authing.idsToUsernames(likes.map((likes) => likes.likedBy));
+    return likes.map((like, i) => ({ ...like, likedBy: authors[i] }));
   }
 }
 
