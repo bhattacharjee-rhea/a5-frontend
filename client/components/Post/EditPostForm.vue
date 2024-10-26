@@ -2,19 +2,33 @@
 import { ref } from "vue";
 import { fetchy } from "../../utils/fetchy";
 import { formatDate } from "../../utils/formatDate";
+import PermissionsComponent from "./PermissionsComponent.vue";
 
 const props = defineProps(["post"]);
 const content = ref(props.post.content);
+const viewPermissions = ref(props.post.viewPermissions.map(({ target, groupName }) => ({ target, groupName })));
+const likePermissions = ref(props.post.likePermissions.map(({ target, groupName }) => ({ target, groupName })));
+
 const emit = defineEmits(["editPost", "refreshPosts"]);
 
 const editPost = async (content: string) => {
   try {
     await fetchy(`/api/posts/${props.post._id}`, "PATCH", { body: { content: content } });
+    await fetchy(`/api/permission/views`, "PUT", { body: { postId: props.post._id, groupIds: viewPermissions.value.map((permission) => permission.target) } });
+    await fetchy(`/api/permission/likes`, "PUT", { body: { postId: props.post._id, groupIds: likePermissions.value.map((permission) => permission.target) } });
   } catch (e) {
     return;
   }
   emit("editPost");
   emit("refreshPosts");
+};
+
+const updatePermissions = (type: "view" | "like", permission: any) => {
+  if (type === "view") {
+    viewPermissions.value = permission;
+  } else if (type === "like") {
+    likePermissions.value = permission;
+  }
 };
 </script>
 
@@ -22,6 +36,7 @@ const editPost = async (content: string) => {
   <form @submit.prevent="editPost(content)">
     <p class="author">{{ props.post.author }}</p>
     <textarea id="content" v-model="content" placeholder="Create a post!" required> </textarea>
+    <PermissionsComponent :post="props.post" @refreshPermissions="updatePermissions" />
     <div class="base">
       <menu>
         <li><button class="btn-small pure-button-primary pure-button" type="submit">Save</button></li>

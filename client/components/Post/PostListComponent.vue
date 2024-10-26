@@ -25,18 +25,37 @@ async function getPosts() {
   posts.value = postResults;
 
   for (const post of posts.value) {
-    let likes;
+    let info;
     try {
-      likes = await fetchy(`/api/likes/${post._id}`, "GET");
+      info = await fetchy(`/api/posts/info/${post._id}`, "GET");
     } catch (_) {
       continue;
     }
-    post.likes = likes;
+
+    post.likes = info.likes;
+    post.viewPermissions = info.viewPermissions;
+    post.likePermissions = info.likePermissions;
   }
 }
 
 function updateEditing(id: string) {
   editing.value = id;
+}
+
+async function getPermissions(id: string) {
+  for (const post of posts.value) {
+    if (post._id == id) {
+      let permissions;
+      try {
+        permissions = await fetchy(`/api/permissions/${id}`, "GET");
+      } catch (_) {
+        return;
+      }
+
+      post.viewPermissions = permissions.viewPermissions;
+      post.likePermissions = permissions.likePermissions;
+    }
+  }
 }
 
 onBeforeMount(async () => {
@@ -56,7 +75,9 @@ onBeforeMount(async () => {
   <section class="posts" v-if="loaded && posts.length !== 0">
     <article v-for="post in posts" :key="post._id">
       <PostComponent v-if="editing !== post._id" :post="post" @refreshPosts="getPosts" @editPost="updateEditing" />
-      <EditPostForm v-else :post="post" @refreshPosts="getPosts" @editPost="updateEditing" />
+      <div v-else>
+        <EditPostForm :post="post" @refreshPosts="getPosts" @editPost="updateEditing" />
+      </div>
     </article>
   </section>
   <p v-else-if="loaded">No posts found</p>
