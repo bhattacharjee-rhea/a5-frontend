@@ -18,6 +18,20 @@ const deletePost = async () => {
 <template>
   <p class="author">{{ props.post.author }}</p>
   <p>{{ props.post.content }}</p>
+
+  <section class="likes">
+    <p><i>Liked by</i></p>
+    <p v-for="like in props.post.likes" :key="like._id">{{ like.likedBy }}</p>
+  </section>
+
+  <section class="permissions">
+    <p><i>Viewable by</i></p>
+    <p v-for="permission in props.post.viewPermissions" :key="permission._id">{{ permission.groupName }}</p>
+
+    <p><i>Likeable by</i></p>
+    <p v-for="permission in props.post.likePermissions" :key="permission._id">{{ permission.groupName }}</p>
+  </section>
+
   <div class="base">
     <menu>
       <li><button class="btn-small pure-button" @click="emit('editPost', props.post._id)">Edit</button></li>
@@ -28,8 +42,6 @@ const deletePost = async () => {
       <p v-else>Created on: {{ formatDate(props.post.dateCreated) }}</p>
     </article>
   </div>
-  <p>Liked by</p>
-  <p v-for="like in props.post.likes" :key="like._id">{{ like.likedBy }}</p>
 </template>
 
 <style scoped>
@@ -43,7 +55,7 @@ p {
 }
 
 .likes {
-  margin-left: auto;
+  margin-top: 1em;
 }
 
 menu {
