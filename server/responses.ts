@@ -1,6 +1,8 @@
-import { Authing } from "./app";
+import { Authing, Grouping } from "./app";
 import { AlreadyFriendsError, FriendNotFoundError, FriendRequestAlreadyExistsError, FriendRequestDoc, FriendRequestNotFoundError } from "./concepts/friending";
+import { GroupDoc } from "./concepts/grouping";
 import { LikeDoc } from "./concepts/liking";
+import { PermissionDoc } from "./concepts/permitting";
 import { PostAuthorNotMatchError, PostDoc } from "./concepts/posting";
 import { Router } from "./framework/router";
 
@@ -45,6 +47,22 @@ export default class Responses {
   static async likes(likes: LikeDoc[]) {
     const authors = await Authing.idsToUsernames(likes.map((likes) => likes.likedBy));
     return likes.map((like, i) => ({ ...like, likedBy: authors[i] }));
+  }
+
+  /**
+   * Converts an array of GroupDocs into more readable format for the frontend by converting the member ids into usernames.
+   */
+  static async groups(groups: GroupDoc[]) {
+    const members = await Promise.all(groups.map((group) => Authing.idsToUsernames(group.includes)));
+    return groups.map((group, i) => ({ ...group, members: members[i] }));
+  }
+
+  /**
+   * Converts an array of PermissionDocs into more readable format for the frontend by converting the group id into a name.
+   */
+  static async permissions(permissions: PermissionDoc[]) {
+    const groupNames = (await Promise.all(permissions.map((permission) => permission.target).map((oid) => Grouping.getGroup(oid)))).map((group) => group.name);
+    return permissions.map((permission, i) => ({ ...permission, groupName: groupNames[i] }));
   }
 }
 

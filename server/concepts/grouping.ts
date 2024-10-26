@@ -33,6 +33,16 @@ export default class GroupingConcept {
     return { msg: "Group deleted successfully!" };
   }
 
+  async updateName(_id: ObjectId, name: string) {
+    await this.groups.partialUpdateOne({ _id }, { name });
+    return { msg: "Group name updated successfully!" };
+  }
+
+  async updateIncludes(_id: ObjectId, includes: ObjectId[]) {
+    await this.groups.partialUpdateOne({ _id }, { includes });
+    return { msg: "Group members updated successfully!" };
+  }
+
   async addToGroup(group: ObjectId, account: ObjectId) {
     const groupDoc = await this.groups.readOne({ _id: group });
     if (groupDoc == null) {

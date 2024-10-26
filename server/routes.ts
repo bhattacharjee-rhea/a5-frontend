@@ -205,6 +205,28 @@ class Routes {
     return await Grouping.delete(oid);
   }
 
+  // change group name
+  @Router.put("/groups/name/:groupId")
+  async updateGroupName(session: SessionDoc, groupId: string, name: string) {
+    const user = Sessioning.getUser(session);
+    const oid = new ObjectId(groupId);
+    await Grouping.assertAuthorIsCreator(oid, user);
+    return await Grouping.updateName(oid, name);
+  }
+
+  // change group members from a list of member names
+  @Router.put("/groups/includes/:groupId")
+  async updateGroupMembers(session: SessionDoc, groupId: string, members: string[]) {
+    const user = Sessioning.getUser(session);
+    const group_oid = new ObjectId(groupId);
+    const group_members = await Promise.all(members.map((name) => Authing.getUserByUsername(name)));
+    await Grouping.assertAuthorIsCreator(group_oid, user);
+    return await Grouping.updateIncludes(
+      group_oid,
+      group_members.map((member) => member._id),
+    );
+  }
+
   // add to group
   @Router.put("/groups/:groupId/:userId")
   async addFriendToGroup(session: SessionDoc, groupId: string, userId: string) {
@@ -231,14 +253,14 @@ class Routes {
   @Router.get("/groups/member")
   async getMemberGroups(session: SessionDoc) {
     const user = Sessioning.getUser(session);
-    return await Grouping.getGroupsByMember(user);
+    return await Responses.groups(await Grouping.getGroupsByMember(user));
   }
 
   // get groups created by user
   @Router.get("/groups/creator")
   async getCreatedGroups(session: SessionDoc) {
     const user = Sessioning.getUser(session);
-    return await Grouping.getGroupsByCreator(user);
+    return await Responses.groups(await Grouping.getGroupsByCreator(user));
   }
 
   // get group by ID
@@ -260,7 +282,7 @@ class Routes {
     const viewPermissions = await ViewPermitting.getPermissionsForResource(oid);
     const likePermissions = await LikePermitting.getPermissionsForResource(oid);
 
-    return { views: viewPermissions, likes: likePermissions };
+    return { views: Responses.permissions(viewPermissions), likes: Responses.permissions(likePermissions) };
   }
 
   // see your permissions for another user's post
@@ -351,6 +373,58 @@ class Routes {
     await LikePermitting.delete(group_oid, oid);
 
     return { msg: "Sucessfully removed permission!" };
+  }
+
+  // update view permissions for a post
+  @Router.put("/permission/views")
+  async updateViewPermissions(session: SessionDoc, postId: string, groupIds: string[]) {
+    const user = Sessioning.getUser(session);
+    const post_oid = new ObjectId(postId);
+    await Posting.assertAuthorIsUser(post_oid, user);
+
+    const viewPermissions = await ViewPermitting.getPermissionsForResource(post_oid);
+    viewPermissions.forEach(async (permission) => await ViewPermitting.delete(permission.target, post_oid));
+
+    groupIds.forEach(async (groupId) => {
+      const group_oid = new ObjectId(groupId);
+      await Grouping.assertAuthorIsCreator(group_oid, user);
+      await ViewPermitting.create(group_oid, post_oid);
+    });
+
+    return { msg: "Sucessfully updated permissions!" };
+  }
+
+  // update like permissions for a post
+  @Router.put("/permission/likes")
+  async updateLikePermissions(session: SessionDoc, postId: string, groupIds: string[]) {
+    const user = Sessioning.getUser(session);
+    const post_oid = new ObjectId(postId);
+    await Posting.assertAuthorIsUser(post_oid, user);
+
+    const likePermissions = await LikePermitting.getPermissionsForResource(post_oid);
+    likePermissions.forEach(async (permission) => await LikePermitting.delete(permission.target, post_oid));
+
+    groupIds.forEach(async (groupId) => {
+      const group_oid = new ObjectId(groupId);
+      await Grouping.assertAuthorIsCreator(group_oid, user);
+      await LikePermitting.create(group_oid, post_oid);
+    });
+
+    return { msg: "Sucessfully updated permissions!" };
+  }
+
+  // get like and permission information for a post
+  @Router.get("/posts/info/:postId")
+  async getPostInformation(session: SessionDoc, postId: string) {
+    const user = Sessioning.getUser(session);
+    const post_oid = new ObjectId(postId);
+    await Posting.assertAuthorIsUser(post_oid, user);
+
+    const likes = await Liking.getLikesForItem(post_oid);
+    const viewPermissions = await ViewPermitting.getPermissionsForResource(post_oid);
+    const likePermissions = await LikePermitting.getPermissionsForResource(post_oid);
+
+    return { likes: await Responses.likes(likes), viewPermissions: await Responses.permissions(viewPermissions), likePermissions: await Responses.permissions(likePermissions) };
   }
 }
 
