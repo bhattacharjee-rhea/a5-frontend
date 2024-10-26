@@ -6,16 +6,16 @@ import PermissionsComponent from "./PermissionsComponent.vue";
 
 const props = defineProps(["post"]);
 const content = ref(props.post.content);
-const viewPermissions = ref(props.post.viewPermissions.map(({ target, groupName }) => ({ target, groupName })));
-const likePermissions = ref(props.post.likePermissions.map(({ target, groupName }) => ({ target, groupName })));
+const viewPermissions = ref(props.post.viewPermissions.map(({ target, groupName }: any) => ({ target, groupName })));
+const likePermissions = ref(props.post.likePermissions.map(({ target, groupName }: any) => ({ target, groupName })));
 
 const emit = defineEmits(["editPost", "refreshPosts"]);
 
 const editPost = async (content: string) => {
   try {
     await fetchy(`/api/posts/${props.post._id}`, "PATCH", { body: { content: content } });
-    await fetchy(`/api/permission/views`, "PUT", { body: { postId: props.post._id, groupIds: viewPermissions.value.map((permission) => permission.target) } });
-    await fetchy(`/api/permission/likes`, "PUT", { body: { postId: props.post._id, groupIds: likePermissions.value.map((permission) => permission.target) } });
+    await fetchy(`/api/permission/views`, "PUT", { body: { postId: props.post._id, groupIds: viewPermissions.value.map((permission: any) => permission.target) } });
+    await fetchy(`/api/permission/likes`, "PUT", { body: { postId: props.post._id, groupIds: likePermissions.value.map((permission: any) => permission.target) } });
   } catch (e) {
     return;
   }

@@ -34,9 +34,9 @@ async function getRequests() {
     return;
   }
 
-  requestResults = requestResults.filter((request) => request.status == "pending");
-  incomingRequests.value = requestResults.filter((request) => request.to == currentUsername.value);
-  outgoingRequests.value = requestResults.filter((request) => request.from == currentUsername.value);
+  requestResults = requestResults.filter((request: any) => request.status == "pending");
+  incomingRequests.value = requestResults.filter((request: any) => request.to == currentUsername.value);
+  outgoingRequests.value = requestResults.filter((request: any) => request.from == currentUsername.value);
 }
 
 onBeforeMount(async () => {

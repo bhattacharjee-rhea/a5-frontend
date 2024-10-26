@@ -5,8 +5,8 @@ import AddGroupComponent from "./AddGroupComponent.vue";
 const props = defineProps(["post"]);
 const emit = defineEmits(["refreshPermissions"]);
 
-const viewPermissions = ref(props.post ? props.post.viewPermissions.map(({ target, groupName }) => ({ target, groupName })) : []);
-const likePermissions = ref(props.post ? props.post.likePermissions.map(({ target, groupName }) => ({ target, groupName })) : []);
+const viewPermissions = ref(props.post ? props.post.viewPermissions.map(({ target, groupName }: any) => ({ target, groupName })) : []);
+const likePermissions = ref(props.post ? props.post.likePermissions.map(({ target, groupName }: any) => ({ target, groupName })) : []);
 const editing = ref("");
 
 function updatePermissions(groups: any[], type: "view" | "like") {

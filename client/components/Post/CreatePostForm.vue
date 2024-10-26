@@ -34,9 +34,9 @@ const createPost = async (content: string) => {
 
 const createPermissions = (type: "view" | "like", permission: any) => {
   if (type === "view") {
-    viewPermissions.value = permission.map((permission) => permission.target);
+    viewPermissions.value = permission.map((permission: any) => permission.target);
   } else if (type === "like") {
-    likePermissions.value = permission.map((permission) => permission.target);
+    likePermissions.value = permission.map((permission: any) => permission.target);
   }
 };
 

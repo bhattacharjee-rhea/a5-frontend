@@ -24,7 +24,7 @@ function setEdit(groupId: any) {
   editing.value = groupId;
 }
 
-async function createGroup(_, name: string, members: string[]) {
+async function createGroup(_: any, name: string, members: string[]) {
   loaded.value = false;
   const group = await fetchy(`/api/groups/${name}`, "POST");
 
